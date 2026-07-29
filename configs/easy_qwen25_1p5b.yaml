@@ -1,0 +1,34 @@
+training:
+  population_size: 32
+  batch_size: 64
+  sigma: 0.0015
+  learning_rate: 0.00025
+  epochs: 2
+  max_steps: 234
+  seed: 42
+  num_engines: 8
+  reward_normalization_ddof: 0
+  reward_normalization_epsilon: 1.0e-8
+  engine_sync_every: 117
+  checkpoint_steps: [117, 234]
+
+generation:
+  temperature: 0.0
+  top_p: 1.0
+  max_new_tokens: 2048
+  max_model_length: 4096
+  gpu_memory_utilization: 0.70
+  dtype: bfloat16
+
+evaluation:
+  temperature: 0.6
+  top_p: 1.0
+  num_samples: 32
+  max_new_tokens: 2048
+  max_model_length: 4096
+  gpu_memory_utilization: 0.85
+  dtype: bfloat16
+  seed: 0
+
+format_reward: 0.1
+prompt_mode: chat

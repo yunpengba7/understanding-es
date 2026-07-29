@@ -1,0 +1,33 @@
+{
+  "model": {
+    "base_id": "Qwen/Qwen2.5-1.5B-Instruct",
+    "base_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "base_weight_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+    "es_step_234_weight_sha256": "2e5bcfb85ec4570d09180f05bc0765845afbe95310c874a69287f7416a29e5cb"
+  },
+  "dataset": {
+    "train": {
+      "rows": 7473,
+      "sha256": "ea82612ea9582142387730c793eb67d3b12849002bc0b7fa6f8efafa7351419d"
+    },
+    "test": {
+      "rows": 1319,
+      "sha256": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59"
+    }
+  },
+  "evaluation": {
+    "mean_absolute_tolerance": 0.005,
+    "base": {
+      "greedy_correct": 988,
+      "greedy_total": 1319,
+      "greedy": 0.7490523123578469,
+      "mean_at_32": 0.702710386656558
+    },
+    "es_step_234": {
+      "greedy_correct": 966,
+      "greedy_total": 1319,
+      "greedy": 0.7323730098559514,
+      "mean_at_32": 0.7319939347990903
+    }
+  }
+}

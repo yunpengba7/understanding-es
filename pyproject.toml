@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "es-llm-reasoning-artifact"
+version = "0.1.0"
+description = "Anonymous ES reproduction artifact for an AAAI-27 submission"
+readme = "README.md"
+requires-python = "==3.13.*"
+license = { file = "LICENSE" }
+dependencies = [
+    "huggingface-hub==0.36.2",
+    "math-verify==0.9.0",
+    "numpy==2.2.6",
+    "pandas==2.3.3",
+    "pyarrow==23.0.1",
+    "pyyaml==6.0.3",
+    "ray[default]==2.55.0",
+    "safetensors==0.7.0",
+    "sympy==1.13.3",
+    "tensorboard==2.20.0",
+    "torch==2.10.0",
+    "tqdm==4.67.3",
+    "transformers==4.57.6",
+    "vllm==0.19.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.0.3",
+    "ruff==0.12.0",
+]
+
+[project.scripts]
+es-train = "es_reproduction.train:cli"
+es-evaluate = "es_reproduction.evaluation:cli"
+es-verify = "es_reproduction.verify:cli"
+es-audit = "es_reproduction.audit:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/es_reproduction"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

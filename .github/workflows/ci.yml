@@ -1,0 +1,19 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  cpu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --extra dev --locked
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+      - run: uv run es-audit .
