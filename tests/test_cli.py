@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import json
+import math
 import os
+import sys
+from types import SimpleNamespace
 
+from es_reproduction import evaluation
 from es_reproduction.evaluation import (
     BASE_MODEL_ID,
     BASE_MODEL_REVISION,
@@ -57,6 +62,120 @@ def test_sampled_evaluation_uses_engine_seed_stream_not_one_shared_request_seed(
         max_tokens=2048,
     )
     assert "seed" not in kwargs
+
+
+def test_evaluation_writes_pass_metrics_and_sample_hits(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    generation_calls = []
+
+    class FakeSamplingParams:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    class FakeLLM:
+        def __init__(self, **kwargs):
+            assert kwargs["seed"] == 0
+
+        def generate(self, prompts, sampling):
+            generation_calls.append(sampling.kwargs)
+            assert prompts == ["prompt: first", "prompt: second"]
+            if sampling.kwargs.get("n") == 32:
+                return [
+                    SimpleNamespace(
+                        outputs=[
+                            SimpleNamespace(text="right" if index < 16 else "wrong")
+                            for index in range(32)
+                        ]
+                    ),
+                    SimpleNamespace(
+                        outputs=[SimpleNamespace(text="wrong") for _ in range(32)]
+                    ),
+                ]
+            return [
+                SimpleNamespace(outputs=[SimpleNamespace(text="right")]),
+                SimpleNamespace(outputs=[SimpleNamespace(text="wrong")]),
+            ]
+
+    class FakeTokenizer:
+        @staticmethod
+        def from_pretrained(*args, **kwargs):
+            return object()
+
+    fake_torch = SimpleNamespace(
+        cuda=SimpleNamespace(
+            device_count=lambda: 1,
+            get_device_name=lambda index: "Test GPU",
+        )
+    )
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(
+        sys.modules,
+        "transformers",
+        SimpleNamespace(AutoTokenizer=FakeTokenizer),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "vllm",
+        SimpleNamespace(LLM=FakeLLM, SamplingParams=FakeSamplingParams),
+    )
+    monkeypatch.setattr(
+        evaluation,
+        "load_split",
+        lambda data_dir, split: (["first", "second"], ["1", "2"]),
+    )
+    monkeypatch.setattr(
+        evaluation,
+        "dataset_manifest",
+        lambda data_dir: {"test": {"rows": 2}},
+    )
+    monkeypatch.setattr(
+        evaluation,
+        "render_gsm8k_prompt",
+        lambda question, tokenizer: f"prompt: {question}",
+    )
+    monkeypatch.setattr(
+        evaluation,
+        "is_gsm8k_correct",
+        lambda response, gold: response == "right",
+    )
+    model_dir = tmp_path / "Qwen2.5-1.5B-Instruct"
+    model_dir.mkdir()
+    output_dir = tmp_path / "evaluation"
+
+    result = evaluation.run_evaluation(
+        model=str(model_dir),
+        output_dir=output_dir,
+        data_dir=tmp_path,
+        label="base",
+    )
+
+    assert generation_calls[0]["n"] == 32
+    assert "seed" not in generation_calls[0]
+    assert generation_calls[1]["temperature"] == 0.0
+    assert result["greedy"] == {"correct": 1, "total": 2, "accuracy": 0.5}
+    assert result["sampling"] == {
+        "pass_at_1": 0.25,
+        "pass_at_16": (1 - 1 / math.comb(32, 16)) / 2,
+        "pass_at_32": 0.5,
+    }
+    assert json.loads((output_dir / "result.json").read_text()) == result
+    sampled_rows = [
+        json.loads(line)
+        for line in (output_dir / "sampled_samples.jsonl").read_text().splitlines()
+    ]
+    assert [row["hits"] for row in sampled_rows] == [16, 0]
+    assert all(len(row["samples"]) == 32 for row in sampled_rows)
+    assert all(
+        set(sample) == {"response", "correct"}
+        for row in sampled_rows
+        for sample in row["samples"]
+    )
+    assert [sample["correct"] for sample in sampled_rows[0]["samples"]] == [
+        *([True] * 16),
+        *([False] * 16),
+    ]
 
 
 def test_remote_base_evaluation_pins_canonical_revision(monkeypatch, tmp_path) -> None:

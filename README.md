@@ -50,19 +50,25 @@ The paper studies ES through three research questions:
 
 The reference endpoint results reported by this package are:
 
-| Model | Greedy | Sampled Pass@1 (`mean@32`) |
-| --- | ---: | ---: |
-| `Qwen2.5-1.5B-Instruct` (base checkpoint) | 988 / 1,319 | 0.702710 |
-| `Qwen2.5-1.5B-Instruct` (ES checkpoint, step 234) | 966 / 1,319 | 0.731994 |
+| Model | Greedy | Pass@1 | Pass@16 | Pass@32 |
+| --- | ---: | ---: | ---: | ---: |
+| `Qwen2.5-1.5B-Instruct` (base checkpoint) | 988 / 1,319 | 0.702710 | 0.948300 | 0.963609 |
+| `Qwen2.5-1.5B-Instruct` (ES checkpoint, step 234) | 966 / 1,319 | 0.731994 | 0.948958 | 0.965883 |
 
-The evaluator directly reports two endpoint metrics: temperature-0 greedy accuracy (together with its correct and total counts) and sampled Pass@1 (`mean@32`). It retains the correctness of all 32 sampled responses per question in `sampled_samples.jsonl`, but it does not directly report Pass@32 or Maj@32.
+The evaluator reports temperature-0 greedy accuracy together with sampled Pass@1, Pass@16, and Pass@32. It retains all 32 sampled responses, their correctness, and the per-question `hits` count in `sampled_samples.jsonl`.
 
 The sampled protocol retains exactly $n=32$ responses per question at temperature 0.6. For a question with $c$ correct responses:
 
-- sampled **Pass@1** is $c/n$; averaging it over questions is exactly the `mean@32` value reported by this package;
-- **Pass@32** is 1 if at least one of the 32 responses is correct and 0 otherwise, averaged over questions. More generally, the paper uses the standard without-replacement Pass@$K$ estimator.
+- **Pass@1** is $c/n$;
+- **Pass@$K$** uses the standard without-replacement estimator
 
-The paper's statement that ES improves Pass@1 refers to the sampled metric: `mean@32` rises from `0.702710` to `0.731994`. The separate temperature-0 greedy audit declines from 988 to 966 correct, so it must not be substituted for sampled Pass@1. vLLM must return all 32 candidates or evaluation aborts; an unparseable response is retained and scored as incorrect.
+$$
+\operatorname{Pass@K}=1-\frac{\binom{n-c}{K}}{\binom{n}{K}},
+$$
+
+computed per question and then macro-averaged. Pass@32 is therefore the fraction of questions with at least one correct response among the 32 retained samples.
+
+The paper's statement that ES improves Pass@1 refers to the sampled metric: Pass@1 rises from `0.702710` to `0.731994`. The separate temperature-0 greedy audit declines from 988 to 966 correct, so it must not be substituted for sampled Pass@1. vLLM must return all 32 candidates or evaluation aborts; an unparseable response is retained and scored as incorrect.
 
 ## How it works ⚙️
 
@@ -212,7 +218,7 @@ The scheduler runs both tasks concurrently when two GPUs are idle and sequential
 
 ### Reference results
 
-[`reference/results.json`](reference/results.json) provides the paper run's model metadata, dataset row counts, greedy results, and sampled Pass@1 (`mean@32`) as a machine-readable reference. These values are provided for comparison only; the package does not impose an automated pass/fail acceptance criterion on a user's run.
+[`reference/results.json`](reference/results.json) provides the paper run's model metadata, dataset row counts, greedy results, Pass@1, Pass@16, and Pass@32 as a machine-readable reference. These values are provided for comparison only; the package does not impose an automated pass/fail acceptance criterion on a user's run.
 
 ## Outputs
 

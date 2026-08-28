@@ -10,7 +10,7 @@ from typing import Any
 
 from .config import load_canonical_config
 from .data import dataset_manifest, load_split
-from .metrics import compute_mean_at_k
+from .metrics import compute_sample_metrics
 from .prompts import render_gsm8k_prompt
 from .rewards import is_gsm8k_correct
 from .train import repository_root
@@ -119,6 +119,37 @@ def run_evaluation(
         seed=config.evaluation.seed,
     )
 
+    sampled_outputs = engine.generate(
+        prompts,
+        SamplingParams(
+            **sampled_sampling_kwargs(
+                temperature=config.evaluation.temperature,
+                top_p=config.evaluation.top_p,
+                num_samples=config.evaluation.num_samples,
+                max_tokens=config.evaluation.max_new_tokens,
+            )
+        ),
+    )
+    sampled_texts = _generated_texts(sampled_outputs, config.evaluation.num_samples)
+    sampled_rows = []
+    for index, (responses, gold) in enumerate(zip(sampled_texts, golds, strict=True)):
+        samples = [
+            {
+                "response": response,
+                "correct": is_gsm8k_correct(response, gold),
+            }
+            for response in responses
+        ]
+        sampled_rows.append(
+            {
+                "index": index,
+                "gold": gold,
+                "hits": sum(bool(sample["correct"]) for sample in samples),
+                "samples": samples,
+            }
+        )
+    sample_metrics = compute_sample_metrics(sampled_rows)
+
     greedy_outputs = engine.generate(
         prompts,
         SamplingParams(**greedy_sampling_kwargs(config.evaluation.max_new_tokens)),
@@ -135,34 +166,6 @@ def run_evaluation(
     ]
     greedy_correct = sum(bool(row["correct"]) for row in greedy_rows)
 
-    sampled_outputs = engine.generate(
-        prompts,
-        SamplingParams(
-            **sampled_sampling_kwargs(
-                temperature=config.evaluation.temperature,
-                top_p=config.evaluation.top_p,
-                num_samples=config.evaluation.num_samples,
-                max_tokens=config.evaluation.max_new_tokens,
-            )
-        ),
-    )
-    sampled_texts = _generated_texts(sampled_outputs, config.evaluation.num_samples)
-    sampled_rows = []
-    for index, (responses, gold) in enumerate(zip(sampled_texts, golds, strict=True)):
-        sampled_rows.append(
-            {
-                "index": index,
-                "gold": gold,
-                "samples": [
-                    {
-                        "response": response,
-                        "correct": is_gsm8k_correct(response, gold),
-                    }
-                    for response in responses
-                ],
-            }
-        )
-    mean_at_32 = compute_mean_at_k(sampled_rows, k=32)
     result = {
         "benchmark": "gsm8k",
         "label": label,
@@ -171,7 +174,7 @@ def run_evaluation(
             "total": len(greedy_rows),
             "accuracy": greedy_correct / len(greedy_rows),
         },
-        "sampling": {"mean_at_32": mean_at_32},
+        "sampling": sample_metrics,
         "provenance": {
             "dataset": dataset_manifest(data_dir),
             "model_name": Path(resolved_model).name,

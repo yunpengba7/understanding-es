@@ -50,6 +50,13 @@ def test_reference_results_have_the_documented_endpoint_schema() -> None:
     assert set(results["model"]) == {"base_id", "base_revision"}
     assert set(results["dataset"]) == {"train", "test"}
     assert set(results["evaluation"]) == {"base", "es_step_234"}
-    metric_fields = {"greedy_correct", "greedy_total", "greedy", "mean_at_32"}
+    metric_fields = {
+        "greedy_correct",
+        "greedy_total",
+        "greedy",
+        "pass_at_1",
+        "pass_at_16",
+        "pass_at_32",
+    }
     assert set(results["evaluation"]["base"]) == metric_fields
     assert set(results["evaluation"]["es_step_234"]) == metric_fields

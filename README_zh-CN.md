@@ -50,19 +50,25 @@
 
 本仓库提供的端点参考结果为：
 
-| 模型 | Greedy | 采样 Pass@1（`mean@32`） |
-| --- | ---: | ---: |
-| `Qwen2.5-1.5B-Instruct`（基座 checkpoint） | 988 / 1,319 | 0.702710 |
-| `Qwen2.5-1.5B-Instruct`（ES 第 234 步 checkpoint） | 966 / 1,319 | 0.731994 |
+| 模型 | Greedy | Pass@1 | Pass@16 | Pass@32 |
+| --- | ---: | ---: | ---: | ---: |
+| `Qwen2.5-1.5B-Instruct`（基座 checkpoint） | 988 / 1,319 | 0.702710 | 0.948300 | 0.963609 |
+| `Qwen2.5-1.5B-Instruct`（ES 第 234 步 checkpoint） | 966 / 1,319 | 0.731994 | 0.948958 | 0.965883 |
 
-评估程序直接报告两项端点指标：temperature-0 greedy 准确率（同时记录正确数和总题数），以及采样 Pass@1（`mean@32`）。`sampled_samples.jsonl` 会保留每道题全部 32 个采样回答的正确性，但程序不会直接报告 Pass@32 或 Maj@32。
+评估程序会报告 temperature-0 greedy 准确率，以及采样 Pass@1、Pass@16 和 Pass@32。`sampled_samples.jsonl` 会保留每道题全部 32 个采样回答、每个回答的正确性和逐题 `hits` 计数。
 
 采样协议以 temperature 0.6 为每道题精确保留 $n=32$ 个回答。若其中 $c$ 个回答正确：
 
-- 采样 **Pass@1** 为 $c/n$，对所有题取平均后正是本仓库报告的 `mean@32`；
-- **Pass@32** 在 32 个回答中至少有一个正确时记为 1，否则为 0，再对所有题取平均。更一般地，论文使用标准的不放回 Pass@$K$ 估计器。
+- **Pass@1** 为 $c/n$；
+- **Pass@$K$** 使用标准的不放回估计器
 
-论文中“ES 提升 Pass@1”指的是采样指标：`mean@32` 从 `0.702710` 提升到 `0.731994`。额外的 temperature-0 greedy 审计则从 988 题正确降到 966 题，因此不能把 greedy 指标替代为采样 Pass@1。vLLM 必须返回全部 32 个候选，否则评估会中止；无法解析的回答仍会保留，并按错误计分。
+$$
+\operatorname{Pass@K}=1-\frac{\binom{n-c}{K}}{\binom{n}{K}},
+$$
+
+先逐题计算，再对所有题做宏平均。因此，Pass@32 等于 32 个保留回答中至少出现一个正确回答的题目比例。
+
+论文中“ES 提升 Pass@1”指的是采样指标：Pass@1 从 `0.702710` 提升到 `0.731994`。额外的 temperature-0 greedy 审计则从 988 题正确降到 966 题，因此不能把 greedy 指标替代为采样 Pass@1。vLLM 必须返回全部 32 个候选，否则评估会中止；无法解析的回答仍会保留，并按错误计分。
 
 ## 工作原理 ⚙️
 
@@ -212,7 +218,7 @@ uv run python scripts/run_two_evaluations.py \
 
 ### 参考结果
 
-[`reference/results.json`](reference/results.json) 以机器可读格式提供论文运行所用的模型元数据、数据集行数、greedy 结果和采样 Pass@1（`mean@32`），仅供用户对照。仓库不会对用户运行结果施加强制的自动通过或失败判定。
+[`reference/results.json`](reference/results.json) 以机器可读格式提供论文运行所用的模型元数据、数据集行数、greedy 结果、Pass@1、Pass@16 和 Pass@32，仅供用户对照。仓库不会对用户运行结果施加强制的自动通过或失败判定。
 
 ## 输出
 
