@@ -131,7 +131,6 @@ reference/expected_results.json
 scripts/                      training, evaluation, and free-GPU scheduling commands
 tests/                        CPU tests for configuration, rewards, ES updates, and verification
 assets/readme/                paper overview figure in PDF and PNG formats
-docs/                         reproduction specification and design decisions
 ```
 
 ## Requirements 🧰

@@ -131,7 +131,6 @@ reference/expected_results.json
 scripts/                      训练、评估和空闲 GPU 调度命令
 tests/                        配置、奖励、ES 更新和结果校验的 CPU 测试
 assets/readme/                论文总图的 PDF 和 PNG 版本
-docs/                         复现规格和设计决策
 ```
 
 ## 环境要求 🧰
