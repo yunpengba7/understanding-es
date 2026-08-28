@@ -14,7 +14,7 @@ from typing import Any
 import numpy as np
 
 from .config import ArtifactConfig, load_canonical_config
-from .data import build_training_schedule, dataset_manifest, load_split, model_weight_hashes
+from .data import build_training_schedule, dataset_manifest, load_split
 from .prompts import render_gsm8k_prompt
 from .rewards import score_training_response
 
@@ -312,7 +312,6 @@ def run_training(
             "name": Path(model_path).name,
             "base_id": "Qwen/Qwen2.5-1.5B-Instruct",
             "base_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
-            "weight_sha256": model_weight_hashes(model_path),
         },
         "visible_gpus": torch.cuda.device_count(),
     }

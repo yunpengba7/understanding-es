@@ -3,7 +3,8 @@
 ## Scope
 
 The artifact reproduces the paper's easy-setting ES experiment with
-Qwen2.5-1.5B-Instruct and evaluates the base and two-epoch models on GSM8K.
+Qwen2.5-1.5B-Instruct and evaluates the Qwen2.5-1.5B-Instruct base checkpoint
+and two-epoch ES checkpoint on GSM8K.
 No other optimizer, benchmark, or model family is part of the public contract.
 
 ## Training acceptance
@@ -18,16 +19,18 @@ No other optimizer, benchmark, or model family is part of the public contract.
 
 ## Evaluation acceptance
 
-- Base and two-epoch models are separate single-GPU tasks.
+- The Qwen2.5-1.5B-Instruct base checkpoint and two-epoch ES checkpoint are
+  separate single-GPU tasks.
 - GSM8K uses the included fixed test snapshot.
 - Greedy evaluation matches the exact reference correct-question count.
 - Sampling retains 32 responses per problem.
 - mean@32 matches within absolute error `0.005`.
 
-## Publication requirements
+## Public release requirements
 
-- Anonymous Git identity and no remote.
-- No personal or machine-specific information.
+- Author names, affiliations, correspondence information, and repository URL
+  match the paper metadata.
+- No machine-specific information or private paths.
 - No model weights, generated responses, run logs, checkpoints, or actual result
   files.
 - Exact dependency lock and CPU-only continuous integration.

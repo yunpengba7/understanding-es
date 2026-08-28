@@ -6,7 +6,6 @@ from es_reproduction.config import load_canonical_config
 from es_reproduction.data import (
     build_training_schedule,
     dataset_manifest,
-    model_weight_hashes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,17 +25,11 @@ def test_canonical_config_exposes_the_paper_protocol() -> None:
     assert config.generation.max_new_tokens == 2048
 
 
-def test_fixed_snapshot_identity_and_schedule_are_stable() -> None:
+def test_bundled_snapshot_row_counts_and_schedule_are_stable() -> None:
     manifest = dataset_manifest(ROOT / "data" / "gsm8k")
     assert manifest == {
-        "train": {
-            "rows": 7473,
-            "sha256": "ea82612ea9582142387730c793eb67d3b12849002bc0b7fa6f8efafa7351419d",
-        },
-        "test": {
-            "rows": 1319,
-            "sha256": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59",
-        },
+        "train": {"rows": 7473},
+        "test": {"rows": 1319},
     }
 
     schedule = build_training_schedule(n_train=7473, batch_size=64, epochs=2, seed=42)
@@ -56,12 +49,3 @@ def test_fixed_snapshot_identity_and_schedule_are_stable() -> None:
         5308,
         1534,
     ]
-
-
-def test_model_weight_hashes_are_keyed_without_exposing_parent_paths(tmp_path: Path) -> None:
-    weight = tmp_path / "model.safetensors"
-    weight.write_bytes(b"fixed weight fixture")
-    hashes = model_weight_hashes(tmp_path)
-
-    assert list(hashes) == ["model.safetensors"]
-    assert len(hashes["model.safetensors"]) == 64

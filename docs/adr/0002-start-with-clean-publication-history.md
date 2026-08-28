@@ -1,3 +1,3 @@
-# Start with a clean publication history
+# Keep a focused publication history
 
-The artifact will use a newly initialized Git history rather than retaining or rewriting the research repository's history. After verification and anonymity scanning, it will receive one initial commit under the repository-local identity `Anonymous Authors <anonymous@example.com>` and no remote. This sacrifices commit-level provenance inside the public artifact in exchange for a substantially smaller risk of exposing author metadata, private remotes, internal paths, or unrelated project names.
+The reproduction package started from a focused publication history rather than copying the full internal research repository. After the author release, normal public author identities and the official GitHub remote are allowed. Machine-local paths, generated experiment artifacts, private remotes, and unrelated internal project material remain outside the release.

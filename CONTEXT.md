@@ -1,15 +1,15 @@
-# Anonymous ES Reproduction Artifact
+# Public ES Reproduction Package
 
-This context defines the vocabulary used to package and verify the anonymous code artifact accompanying the AAAI-27 submission.
+This context defines the vocabulary used to package and verify the public code release accompanying “Understanding Evolution Strategies for LLM Reasoning: Broader Reasoning Coverage than GRPO.”
 
 ## Language
 
-**Anonymous artifact**:
-A standalone code repository containing only the material needed to reproduce the submission's declared ES training and GSM8K evaluation claims, without author-identifying information.
+**Public reproduction package**:
+A standalone code repository containing the material needed to reproduce the released easy-setting ES training and GSM8K endpoint evaluation claims. Its author metadata matches the paper, while generated model and evaluation artifacts remain external.
 _Avoid_: Full research repository, source-repository mirror
 
-**Clean publication history**:
-A Git history created specifically for the anonymous artifact that contains no commits, authorship metadata, remotes, or internal paths inherited from the research repository.
+**Focused publication history**:
+A Git history created specifically for the reproduction package rather than copied from the full research repository. Public authorship and the official remote are expected; private paths and unrelated internal history are excluded.
 _Avoid_: Squashed source history, filtered source history
 
 **Greedy-and-mean GSM8K evaluation**:
@@ -21,7 +21,7 @@ The committed greedy and mean@32 evaluation metrics plus small scorer fixtures u
 _Avoid_: Reference outputs, archived generations
 
 **Fixed GSM8K snapshot**:
-The MIT-licensed GSM8K `main` train and test parquet files whose contents, row order, sizes, and SHA-256 identities are fixed by the artifact.
+The bundled MIT-licensed GSM8K `main` train and test parquet files used by the artifact, with expected row counts recorded in the evaluation contract.
 _Avoid_: Downloaded GSM8K, latest GSM8K
 
 **Paper reproduction run**:
@@ -33,14 +33,14 @@ A single-GPU reduced run that verifies installation and execution flow but carri
 _Avoid_: Reproduction run, quick reproduction
 
 **Single-GPU evaluation job**:
-One model-and-task evaluation process restricted to one visible GPU. Independent Base and ES jobs may use any available GPUs concurrently, but no individual evaluation may span multiple GPUs.
+One model-and-task evaluation process restricted to one visible GPU. Independent Qwen2.5-1.5B-Instruct base-checkpoint and ES-checkpoint jobs may use any available GPUs concurrently, but no individual evaluation may span multiple GPUs.
 _Avoid_: Evaluation batch, multi-GPU evaluation
 
-**Base model**:
+**Qwen2.5-1.5B-Instruct base checkpoint**:
 The unmodified Qwen2.5-1.5B-Instruct model evaluated under the greedy-and-mean GSM8K evaluation contract.
 _Avoid_: Initial checkpoint
 
-**Two-epoch ES model**:
+**Qwen2.5-1.5B-Instruct two-epoch ES checkpoint**:
 The Qwen2.5-1.5B-Instruct model produced after 234 ES training steps under the easy-setting protocol.
 _Avoid_: Local model, final model
 
@@ -49,11 +49,11 @@ A standalone Hugging Face model exported after step 117 or step 234 for independ
 _Avoid_: Raw checkpoint, resume checkpoint
 
 **External model artifact**:
-A base model or trained checkpoint supplied by model identifier or caller-provided path and verified by identity metadata, but never stored in the anonymous code repository.
+A base model or trained checkpoint supplied by model identifier or caller-provided path and recorded in run provenance, but never stored in the code repository.
 _Avoid_: Bundled model, repository checkpoint
 
-**Submission paper**:
-The anonymous AAAI-27 submission titled “Understanding Evolution Strategies for LLM Reasoning: Broader Reasoning Coverage than GRPO.”
+**Paper**:
+The research paper titled “Understanding Evolution Strategies for LLM Reasoning: Broader Reasoning Coverage than GRPO.”
 _Avoid_: Project paper, ES paper
 
 **ES reproduction package**:

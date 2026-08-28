@@ -24,9 +24,6 @@ def _exact_base_evaluation(expected: dict) -> dict:
         },
         "provenance": {
             "dataset": expected["dataset"],
-            "weight_sha256": {
-                "model.safetensors": expected["model"]["base_weight_sha256"]
-            },
         },
         "sampling": {"mean_at_32": reference["mean_at_32"]},
     }

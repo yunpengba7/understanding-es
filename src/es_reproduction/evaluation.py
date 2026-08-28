@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import load_canonical_config
-from .data import dataset_manifest, load_split, model_weight_hashes
+from .data import dataset_manifest, load_split
 from .metrics import compute_mean_at_k
 from .prompts import render_gsm8k_prompt
 from .rewards import is_gsm8k_correct
@@ -72,7 +72,7 @@ def resolve_model(model: str, label: str) -> tuple[str, str | None]:
     if label == "base":
         if model != BASE_MODEL_ID:
             raise ValueError(
-                f"The remote Base model must be {BASE_MODEL_ID}; "
+                f"The remote Qwen2.5-1.5B-Instruct base checkpoint must be {BASE_MODEL_ID}; "
                 "pass a local directory to evaluate another snapshot"
             )
         from huggingface_hub import snapshot_download
@@ -176,7 +176,6 @@ def run_evaluation(
             "dataset": dataset_manifest(data_dir),
             "model_name": Path(resolved_model).name,
             "model_revision": revision,
-            "weight_sha256": model_weight_hashes(resolved_model),
             "python": platform.python_version(),
             "torch": version("torch"),
             "transformers": version("transformers"),

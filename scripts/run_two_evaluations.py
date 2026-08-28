@@ -35,7 +35,10 @@ def idle_gpus(*, maximum_used_memory_mib: int) -> list[int]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run Base and ES evaluation tasks independently on any idle GPUs"
+        description=(
+            "Evaluate the Qwen2.5-1.5B-Instruct base checkpoint and ES step-234 "
+            "checkpoint independently on any idle GPUs"
+        )
     )
     parser.add_argument("--base-model", required=True)
     parser.add_argument("--es-model", required=True)

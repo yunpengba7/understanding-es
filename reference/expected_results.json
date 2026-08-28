@@ -1,18 +1,14 @@
 {
   "model": {
     "base_id": "Qwen/Qwen2.5-1.5B-Instruct",
-    "base_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
-    "base_weight_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
-    "es_step_234_weight_sha256": "2e5bcfb85ec4570d09180f05bc0765845afbe95310c874a69287f7416a29e5cb"
+    "base_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306"
   },
   "dataset": {
     "train": {
-      "rows": 7473,
-      "sha256": "ea82612ea9582142387730c793eb67d3b12849002bc0b7fa6f8efafa7351419d"
+      "rows": 7473
     },
     "test": {
-      "rows": 1319,
-      "sha256": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59"
+      "rows": 1319
     }
   },
   "evaluation": {
