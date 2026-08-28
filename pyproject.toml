@@ -50,7 +50,6 @@ dev = [
 [project.scripts]
 es-train = "es_reproduction.train:cli"
 es-evaluate = "es_reproduction.evaluation:cli"
-es-verify = "es_reproduction.verify:cli"
 es-audit = "es_reproduction.audit:cli"
 
 [tool.hatch.build.targets.wheel]

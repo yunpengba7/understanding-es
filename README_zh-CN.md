@@ -48,12 +48,14 @@
 | RQ2：参数漂移与遗忘 | ES 增益集中在稀疏的大幅更新子集；显著全模型漂移并不一定意味着灾难性遗忘 | 仅包含 checkpoint 导出和运行来源记录；不包含更新稀疏性和留出任务评估 |
 | RQ3：ES 设计选择 | z-score 归一化十分重要，two-point 估计在匹配的 GSM8K 实验中没有优势，且模型越大所需种群越小 | 仅包含选定的 z-score、种群 32、单点估计配置；不包含完整的超参数和估计器消融实验 |
 
-本仓库公开端点的验收结果为：
+本仓库提供的端点参考结果为：
 
 | 模型 | Greedy | 采样 Pass@1（`mean@32`） |
 | --- | ---: | ---: |
 | `Qwen2.5-1.5B-Instruct`（基座 checkpoint） | 988 / 1,319 | 0.702710 |
 | `Qwen2.5-1.5B-Instruct`（ES 第 234 步 checkpoint） | 966 / 1,319 | 0.731994 |
+
+评估程序直接报告两项端点指标：temperature-0 greedy 准确率（同时记录正确数和总题数），以及采样 Pass@1（`mean@32`）。`sampled_samples.jsonl` 会保留每道题全部 32 个采样回答的正确性，但程序不会直接报告 Pass@32 或 Maj@32。
 
 采样协议以 temperature 0.6 为每道题精确保留 $n=32$ 个回答。若其中 $c$ 个回答正确：
 
@@ -113,7 +115,7 @@ $$
 | 单 GPU 资源 smoke test | 是 |
 | `Qwen2.5-1.5B-Instruct` 基座 checkpoint 的 GSM8K 评估 | 是 |
 | `Qwen2.5-1.5B-Instruct` ES 第 234 步 checkpoint 的 GSM8K 评估 | 是 |
-| 指标和数据集行数校验 | 是 |
+| 机器可读的端点参考结果 | 是 |
 | GRPO 训练与评估 | 否 |
 | 顺序式 ES$\rightarrow$GRPO 和 GRPO$\rightarrow$ES 训练 | 否 |
 | 跨任务遗忘实验 | 否 |
@@ -123,13 +125,13 @@ $$
 ## 仓库结构 📦
 
 ```text
-src/es_reproduction/          ES 训练、评估、结果校验和发布检查
+src/es_reproduction/          ES 训练、评估、计分和发布检查
 configs/                      固定的论文复现协议
 data/gsm8k/                   精确的 MIT 许可 GSM8K 快照
-reference/expected_results.json
-                              模型元数据、数据集行数和端点验收结果
+reference/results.json
+                              模型元数据、数据集行数和端点参考结果
 scripts/                      训练、评估和空闲 GPU 调度命令
-tests/                        配置、奖励、ES 更新和结果校验的 CPU 测试
+tests/                        配置、奖励、ES 更新和评估的 CPU 测试
 assets/readme/                论文总图的 PDF 和 PNG 版本
 ```
 
@@ -195,7 +197,7 @@ CUDA_VISIBLE_DEVICES=0 \
   outputs/evaluations/es_step_234
 ```
 
-机器可读标签只能是 `base` 或 `es_step_234`：前者表示 `Qwen2.5-1.5B-Instruct` 基座 checkpoint，后者表示 `Qwen2.5-1.5B-Instruct` ES 第 234 步 checkpoint。标签用于选择对应的参考结果契约，不会改变解码参数。
+机器可读标签只能是 `base` 或 `es_step_234`：前者表示 `Qwen2.5-1.5B-Instruct` 基座 checkpoint，后者表示 `Qwen2.5-1.5B-Instruct` ES 第 234 步 checkpoint。标签用于标识所评估的 checkpoint，不会改变解码参数。
 
 也可以把相互独立的 `Qwen2.5-1.5B-Instruct` 基座 checkpoint 和 ES 第 234 步 checkpoint 评估任务调度到当前空闲 GPU：
 
@@ -208,19 +210,9 @@ uv run python scripts/run_two_evaluations.py \
 
 如果有两张空闲 GPU，调度器会并发运行两个任务；如果只有一张，则顺序运行。
 
-### 校验结果
+### 参考结果
 
-```bash
-uv run es-verify --reference reference/expected_results.json \
-  evaluation --model-key base \
-  --result outputs/evaluations/base/result.json
-
-uv run es-verify --reference reference/expected_results.json \
-  evaluation --model-key es_step_234 \
-  --result outputs/evaluations/es_step_234/result.json
-```
-
-Greedy 复现必须匹配精确的正确题数；考虑到 GPU 生成可能产生微小数值差异，`mean@32` 使用 `0.005` 的绝对误差容限。
+[`reference/results.json`](reference/results.json) 以机器可读格式提供论文运行所用的模型元数据、数据集行数、greedy 结果和采样 Pass@1（`mean@32`），仅供用户对照。仓库不会对用户运行结果施加强制的自动通过或失败判定。
 
 ## 输出
 
@@ -228,7 +220,7 @@ Greedy 复现必须匹配精确的正确题数；考虑到 GPU 生成可能产�
 
 双任务调度器会写入 `outputs/evaluations/base/result.json` 和 `outputs/evaluations/es_step_234/result.json`。每个评估目录还包含 `greedy_samples.jsonl` 和 `sampled_samples.jsonl`。
 
-每个结果都会记录数据集行数、模型元数据、软件版本和可见 GPU；`es-verify` 会把数据集行数和端点指标与 `reference/expected_results.json` 对比。训练会在 `run_manifest.json` 中记录解析后的模型目录名称和规范实验所用基础模型的元数据，但不会在开始训练前拒绝调用者提供的其他本地模型快照。
+每个结果都会记录数据集行数、模型元数据、软件版本和可见 GPU。用户可以自行与 [`reference/results.json`](reference/results.json) 中的指标对照，仓库不要求自动验收结果。训练会在 `run_manifest.json` 中记录解析后的模型目录名称和规范实验所用基础模型的元数据，但不会在开始训练前拒绝调用者提供的其他本地模型快照。
 
 整个 `outputs/` 目录被 Git 忽略。
 

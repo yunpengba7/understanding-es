@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -31,3 +32,24 @@ def test_readme_uses_full_model_names(filename: str) -> None:
     )
     for pattern in abbreviated_names:
         assert re.search(pattern, content) is None
+
+
+@pytest.mark.parametrize("filename", ["README.md", "README_zh-CN.md"])
+def test_readme_links_machine_readable_reference_results(filename: str) -> None:
+    content = (ROOT / filename).read_text(encoding="utf-8")
+
+    assert "reference/results.json" in content
+
+
+def test_reference_results_have_the_documented_endpoint_schema() -> None:
+    results = json.loads(
+        (ROOT / "reference" / "results.json").read_text(encoding="utf-8")
+    )
+
+    assert set(results) == {"model", "dataset", "evaluation"}
+    assert set(results["model"]) == {"base_id", "base_revision"}
+    assert set(results["dataset"]) == {"train", "test"}
+    assert set(results["evaluation"]) == {"base", "es_step_234"}
+    metric_fields = {"greedy_correct", "greedy_total", "greedy", "mean_at_32"}
+    assert set(results["evaluation"]["base"]) == metric_fields
+    assert set(results["evaluation"]["es_step_234"]) == metric_fields

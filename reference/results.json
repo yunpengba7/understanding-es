@@ -12,7 +12,6 @@
     }
   },
   "evaluation": {
-    "mean_absolute_tolerance": 0.005,
     "base": {
       "greedy_correct": 988,
       "greedy_total": 1319,

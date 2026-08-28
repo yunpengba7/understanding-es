@@ -48,12 +48,14 @@ The paper studies ES through three research questions:
 | RQ2: drift and forgetting | ES gains are concentrated in a sparse subset of larger-magnitude updates; large whole-model drift does not necessarily imply catastrophic forgetting | Checkpoint export and recorded run provenance only; update-sparsity and held-out evaluations are not included |
 | RQ3: ES design choices | Z-score normalization is important, two-point estimation provides no advantage in the matched GSM8K experiment, and the required population decreases with model scale | The selected z-score, population-32, one-point configuration only; the full hyperparameter and estimator ablations are not included |
 
-The released endpoint acceptance values are:
+The reference endpoint results reported by this package are:
 
 | Model | Greedy | Sampled Pass@1 (`mean@32`) |
 | --- | ---: | ---: |
 | `Qwen2.5-1.5B-Instruct` (base checkpoint) | 988 / 1,319 | 0.702710 |
 | `Qwen2.5-1.5B-Instruct` (ES checkpoint, step 234) | 966 / 1,319 | 0.731994 |
+
+The evaluator directly reports two endpoint metrics: temperature-0 greedy accuracy (together with its correct and total counts) and sampled Pass@1 (`mean@32`). It retains the correctness of all 32 sampled responses per question in `sampled_samples.jsonl`, but it does not directly report Pass@32 or Maj@32.
 
 The sampled protocol retains exactly $n=32$ responses per question at temperature 0.6. For a question with $c$ correct responses:
 
@@ -113,7 +115,7 @@ This repository releases the focused `Qwen2.5-1.5B-Instruct` member of the paper
 | One-GPU resource smoke test | Yes |
 | `Qwen2.5-1.5B-Instruct` base-checkpoint GSM8K evaluation | Yes |
 | `Qwen2.5-1.5B-Instruct` ES step-234-checkpoint GSM8K evaluation | Yes |
-| Metric and dataset-row-count verification | Yes |
+| Machine-readable reference endpoint results | Yes |
 | GRPO training and evaluation | No |
 | Sequential ES$\rightarrow$GRPO and GRPO$\rightarrow$ES training | No |
 | Cross-task forgetting experiments | No |
@@ -123,13 +125,13 @@ This repository releases the focused `Qwen2.5-1.5B-Instruct` member of the paper
 ## Repository map 📦
 
 ```text
-src/es_reproduction/          ES training, evaluation, verification, and release audit
+src/es_reproduction/          ES training, evaluation, scoring, and release audit
 configs/                      fixed paper reproduction protocol
 data/gsm8k/                   exact MIT-licensed GSM8K snapshots
-reference/expected_results.json
-                              model metadata, dataset row counts, and endpoint acceptance values
+reference/results.json
+                              model metadata, dataset row counts, and reference endpoint results
 scripts/                      training, evaluation, and free-GPU scheduling commands
-tests/                        CPU tests for configuration, rewards, ES updates, and verification
+tests/                        CPU tests for configuration, rewards, ES updates, and evaluation
 assets/readme/                paper overview figure in PDF and PNG formats
 ```
 
@@ -195,7 +197,7 @@ CUDA_VISIBLE_DEVICES=0 \
   outputs/evaluations/es_step_234
 ```
 
-The machine-readable label must be either `base` for the `Qwen2.5-1.5B-Instruct` base checkpoint or `es_step_234` for the `Qwen2.5-1.5B-Instruct` ES checkpoint at step 234. It selects the matching expected-results contract and does not change decoding parameters.
+The machine-readable label must be either `base` for the `Qwen2.5-1.5B-Instruct` base checkpoint or `es_step_234` for the `Qwen2.5-1.5B-Instruct` ES checkpoint at step 234. It identifies the evaluated checkpoint and does not change decoding parameters.
 
 Alternatively, schedule the independent `Qwen2.5-1.5B-Instruct` base-checkpoint and ES step-234-checkpoint jobs on currently idle GPUs:
 
@@ -208,19 +210,9 @@ uv run python scripts/run_two_evaluations.py \
 
 The scheduler runs both tasks concurrently when two GPUs are idle and sequentially when only one is available.
 
-### Verify results
+### Reference results
 
-```bash
-uv run es-verify --reference reference/expected_results.json \
-  evaluation --model-key base \
-  --result outputs/evaluations/base/result.json
-
-uv run es-verify --reference reference/expected_results.json \
-  evaluation --model-key es_step_234 \
-  --result outputs/evaluations/es_step_234/result.json
-```
-
-Greedy reproduction requires the exact correct-question count. `mean@32` is accepted within an absolute tolerance of `0.005` because GPU generation can show small numerical variation.
+[`reference/results.json`](reference/results.json) provides the paper run's model metadata, dataset row counts, greedy results, and sampled Pass@1 (`mean@32`) as a machine-readable reference. These values are provided for comparison only; the package does not impose an automated pass/fail acceptance criterion on a user's run.
 
 ## Outputs
 
@@ -228,7 +220,7 @@ Training writes `run_manifest.json`, `metrics.jsonl`, `tensorboard/`, `step_117/
 
 The two-task scheduler writes `outputs/evaluations/base/result.json` and `outputs/evaluations/es_step_234/result.json`. Each evaluation directory also contains `greedy_samples.jsonl` and `sampled_samples.jsonl`.
 
-Each result records dataset row counts, model metadata, software versions, and the visible GPU. `es-verify` compares the recorded dataset row counts and endpoint metrics with `reference/expected_results.json`. Training records the resolved model directory name together with the canonical base-model metadata in `run_manifest.json`, but it does not reject a caller-supplied local snapshot before the run.
+Each result records dataset row counts, model metadata, software versions, and the visible GPU. Users may compare the reported metrics with [`reference/results.json`](reference/results.json); no automated result acceptance is required. Training records the resolved model directory name together with the canonical base-model metadata in `run_manifest.json`, but it does not reject a caller-supplied local snapshot before the run.
 
 The entire `outputs/` tree is ignored by Git.
 
