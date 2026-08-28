@@ -59,7 +59,7 @@ The sampled protocol retains exactly `n = 32` responses per question at temperat
 - **Pass@K** uses the standard without-replacement estimator
 
 ```math
-\operatorname{Pass@K}=1-\frac{\binom{n-c}{K}}{\binom{n}{K}},
+\mathrm{Pass@K}=1-\frac{\binom{n-c}{K}}{\binom{n}{K}},
 ```
 
 computed per question and then macro-averaged. Pass@32 is therefore the fraction of questions with at least one correct response among the 32 retained samples.

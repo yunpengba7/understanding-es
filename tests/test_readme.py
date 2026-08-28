@@ -11,7 +11,7 @@ README = ROOT / "README.md"
 def test_readme_uses_github_math_blocks() -> None:
     content = README.read_text(encoding="utf-8")
 
-    for unsupported in (r"\(", r"\)", r"\[", r"\]", "$$"):
+    for unsupported in (r"\(", r"\)", r"\[", r"\]", r"\operatorname", "$$"):
         assert unsupported not in content
     assert content.count("```math\n") == 2
 
