@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  ⭐ If you find our work useful, please consider <a href="https://huggingface.co/papers/2608.27351"><strong>upvoting it on Hugging Face</strong></a>, <a href="https://www.alphaxiv.org/pdf/2608.27351"><strong>liking it on alphaXiv</strong></a>, and <a href="https://github.com/yunpengba7/understanding-es"><strong>starring this repository on GitHub</strong></a>. Thank you for your support!
+  ⭐ If you find our work useful, please consider <a href="https://www.alphaxiv.org/pdf/2608.27351"><strong>liking it on alphaXiv</strong></a>. Thank you for your support!
 </p>
 
 <p align="center"><strong>Yunpeng Ba<sup>1,*</sup>, Zhi Zheng<sup>2,*</sup>, Yue Xie<sup>1</sup>, Jiaqing Li<sup>5</sup>, Xialiang Tong<sup>3</sup>, Tao Zhong<sup>3</sup>,<br>Mingxuan Yuan<sup>3</sup>, Zhichao Lu<sup>4</sup>, Xuyang Wu<sup>1</sup>, Zhenkun Wang<sup>1</sup></strong></p>
